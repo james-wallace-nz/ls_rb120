@@ -30,7 +30,7 @@ ludo.speak('bark')
 
 # a module allows us to group reusable code into one place.
 
-# Module extends functionality of a class.
+# Module extends functionality of a class. We use modules by using the `include` method invocation followed by the module name. 
 
 # Modules are also used as a namespace. This helps us organise our code better.
 

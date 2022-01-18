@@ -35,6 +35,7 @@ puts fido.walk
 class GoodDog < Animal
   include Swimmable
   include Climable
+  # include Walkable
 end
 
 puts "---GoodDog method lookup---"

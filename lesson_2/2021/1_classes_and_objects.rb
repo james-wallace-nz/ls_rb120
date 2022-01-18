@@ -125,13 +125,13 @@ puts "The person's name is: #{bob}"
 
 # 6. Let's add a to_s method to the class:
 
-class Person
-  # ... rest of class omitted for brevity
+# class Person
+#   # ... rest of class omitted for brevity
 
-  def to_s
-    name
-  end
-end
+#   def to_s
+#     name
+#   end
+# end
 
 # Now, what does the below output?
 
