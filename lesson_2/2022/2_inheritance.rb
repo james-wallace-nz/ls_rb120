@@ -82,17 +82,15 @@ puts bruce.fetch
 # Create a new class called Cat, which can do everything a dog can, except swim or fetch. Assume the methods do the exact same thing. Hint: don't just copy and paste all methods in Dog into Cat; try to come up with some class hierarchy.
 
 
-
-
 # 3. Draw a class hierarchy diagram of the classes from step #2
 
-                Pet (run, jump)
-                 |
-          __________________   
-         |                 |
-        Cat (speak)       Dog (speak, swim, fetch)
-                           |
-                        Bulldog (swim)
+        #         Pet (run, jump)
+        #          |
+        #   __________________
+        #  |                 |
+        # Cat (speak)       Dog (speak, swim, fetch)
+        #                    |
+        #                 Bulldog (swim)
 
 
 # 4. What is the method lookup path and how is it important?
