@@ -186,12 +186,11 @@ end
 RPSGame.new.play
 
 # Compare this design with the one in the previous assignment:
-  # what is the primary improvement of this new design?
 
+# what is the primary improvement of this new design?
 
+  # The game logic for deciding the winner has been abstracted into the Move class. It is not only cleaner and easier to understand, but it also reduces the chance of error. Strings for each move are still being compared but an error will be thrown if an incorrect string is entered by the human player.
 
-  # what is the primary drawback of this new design?
+# what is the primary drawback of this new design?
 
-
-
-  # The biggest take away from the two design refactorings is that when it comes to object oriented design, we're always juggling a tradeoff between more flexible code and indirection. Put another way, the more flexible your code, the more indirection you'll introduce by way of more classes. There's likely an optimal tradeoff on that spectrum for your application somewhere, but that place likely changes as your application matures. This is the source of never-ending debate and discussion in the software development field, but it really comes down to that tradeoff. This is where the "art" of programming comes in.
+  # There is now another class with multiple instance methods. These could be refactored somewhat too.

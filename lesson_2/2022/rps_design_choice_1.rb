@@ -112,16 +112,16 @@ RPSGame.new.play
 
 
 # Compare this design with the one in the previous assignment:
-  # is this design, with Human and Computer sub-classes, better? Why, or why not?
+
+# is this design, with Human and Computer sub-classes, better? Why, or why not?
+
+  # This design is better. Human and Computer are logical sub-classes of the Player class. While both players with the same states, they will have different behaviours. A human will manually choose a name and move while a computer has the name and move selected randomly. Creating logic for both Human and Computer in the Player class creates too much complexity in those instance methods. Each time the player_type must be checked to determine the approriate action.
 
 
+# what is the primary improvement of this new design?
 
-  # what is the primary improvement of this new design?
+  # This design abstracts Human and Computer logic into sub-classes of Player. It makes Human and Computer more logical and easier to understand compared to combining the logic in the Player class.
 
+# what is the primary drawback of this new design?
 
-
-  # what is the primary drawback of this new design?
-
-
-
-
+  # It would take more work to change the Computer to a Human player as we cannot just change the way the second Player object is intantiated (by having no player_type passed in). Therefore, we would have to rename computer local variable everywhere and instantiate a Human object rather than computer object.
