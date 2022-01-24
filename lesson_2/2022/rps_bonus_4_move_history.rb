@@ -1,42 +1,38 @@
-# Add a class for each move
+# Keep track of a history of moves
 
-# What would happen if we went even further and introduced 5 more classes, one for each move:
-# Rock, Paper, Scissors, Lizard, and Spock.
-# How would the code change? Can you make it work?
-# After you're done, can you talk about whether this was a good design decision? What are the pros/cons?
+# As long as the user doesn't quit, keep track of a history of moves by both the human and computer.
+# What data structure will you reach for?
+# Will you use a new class, or an existing class?
+# What will the display output look like?
 
-# this is a poor design decision
-# the moves are really just strings so abstracting each move to a class is another layer of complexity
-# having a class for each move creates more code and makes it harder to understand what our code is doing
-# each move class is the same except for the value of the string for that move 'rock', 'paper'
+# History is a state that a player has, so it is a nwe array instance variable for a player
 
 class Move
   attr_reader :value
-  VALUES = ['Rock', 'Paper', 'Scissors', 'Lizard', 'Spock']
-  # VALUES = [Rock::VALUE, Paper::VALUE, Scissors::VALUE, Lizard::VALUE, Spock::VALUE]
 
+  VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
   def initialize(value)
     @value = value
   end
 
   def rock?
-    @value.value == Rock::VALUE
+    @value == 'rock'
   end
 
   def paper?
-    @value.value == Paper::VALUE
+    @value == 'paper'
   end
 
   def scissors?
-    @value.value == Scissors::VALUE
+    @value == 'scissors'
   end
 
   def lizard?
-    @value.value == Lizard::VALUE
+    @value == 'lizard'
   end
 
   def spock?
-    @value.value == Spock::VALUE
+    @value == 'spock'
   end
 
   def >(other_move)
@@ -56,86 +52,31 @@ class Move
   end
 
   def to_s
-    @value.to_s
-  end
-end
-
-class Rock
-  attr_reader :value
-
-  VALUE = 'Rock'
-
-  def initialize
-    @value = VALUE
-  end
-
-  def to_s
-    @value
-  end
-end
-
-class Paper
-  attr_reader :value
-
-  VALUE = 'Paper'
-
-  def initialize
-    @value = VALUE
-  end
-
-  def to_s
-    @value
-  end
-end
-
-class Scissors
-  attr_reader :value
-
-  VALUE = 'Scissors'
-
-  def initialize
-    @value = VALUE
-  end
-
-  def to_s
-    @value
-  end
-end
-
-class Lizard
-  attr_reader :value
-
-  VALUE = 'Lizard'
-
-  def initialize
-    @value = VALUE
-  end
-
-  def to_s
-    @value
-  end
-end
-
-class Spock
-  attr_reader :value
-
-  VALUE = 'Spock'
-
-  def initialize
-    @value = VALUE
-  end
-
-  def to_s
     @value
   end
 end
 
 class Player
-  attr_accessor :name, :move, :score
+  attr_accessor :name, :move, :score, :history
 
   def initialize
     @score = 0
     set_name
+    @history = []
+  end
+
+  def choose(choice)
+    self.move = Move.new(choice)
+    history << choice
+  end
+
+  def display_move
+    puts "#{name} choose #{move}."
+    puts "#{name} history: #{history}"
+  end
+
+  def display_score
+    puts "#{name} has a score of #{score}."
   end
 end
 
@@ -156,23 +97,11 @@ class Human < Player
     loop do
       puts
       puts "Please choose rock, paper, scissors, lizard or spock:"
-      choice = gets.chomp.capitalize
+      choice = gets.chomp.downcase
       break if Move::VALUES.include? choice
       puts 'Sorry, invalid choice.'
     end
-
-    case choice
-    when Rock::VALUE
-      self.move = Move.new(Rock.new)
-    when Paper::VALUE
-      self.move = Move.new(Paper.new)
-    when Scissors::VALUE
-      self.move = Move.new(Scissors.new)
-    when Lizard::VALUE
-      self.move = Move.new(Lizard.new)
-    when Spock::VALUE
-      self.move = Move.new(Spock.new)
-    end
+    super(choice)
   end
 end
 
@@ -183,19 +112,7 @@ class Computer < Player
 
   def choose
     choice = Move::VALUES.sample
-
-    case choice
-    when Rock::VALUE
-      self.move = Move.new(Rock.new)
-    when Paper::VALUE
-      self.move = Move.new(Paper.new)
-    when Scissors::VALUE
-      self.move = Move.new(Scissors.new)
-    when Lizard::VALUE
-      self.move = Move.new(Lizard.new)
-    when Spock::VALUE
-      self.move = Move.new(Spock.new)
-    end
+    super(choice)
   end
 end
 
@@ -224,8 +141,6 @@ class RPSGame
 
   # rubocop:disable Metrics/MethodLength
   def play
-    puts Rock::VALUE
-    # puts Move::VALUES
     display_welcome_message
     loop do
       reset_scores
@@ -253,8 +168,8 @@ class RPSGame
   end
 
   def display_moves
-    puts "#{human.name} choose #{human.move}."
-    puts "#{computer.name} choose #{computer.move}."
+    human.display_move
+    computer.display_move
   end
 
   def reset_scores
@@ -263,8 +178,8 @@ class RPSGame
   end
 
   def display_scores
-    puts "#{human.name} has a score of #{human.score}."
-    puts "#{computer.name} has a score of #{computer.score}."
+    human.display_score
+    computer.display_score
   end
 
   def display_game_winner
