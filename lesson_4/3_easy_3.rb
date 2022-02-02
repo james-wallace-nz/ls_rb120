@@ -131,7 +131,6 @@ two = AngryCat.new(2, 'Sharpy')
 
 # To show this, lets create two cats.
 
-# Copy Code
 # henry = AngryCat.new(12, "Henry")
 # alex   = AngryCat.new(8, "Alex")
 # We now have two different instances of the AngryCat class.
