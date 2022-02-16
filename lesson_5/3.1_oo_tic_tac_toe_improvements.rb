@@ -161,10 +161,6 @@ class TTTGame
     answer == 'y'
   end
 
-  def clear_screen
-    system 'clear'
-  end
-
   def play
     clear_screen
     display_welcome_message

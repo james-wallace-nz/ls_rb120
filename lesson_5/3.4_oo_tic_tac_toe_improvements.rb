@@ -76,9 +76,6 @@ class Player
   def initialize(marker)
     @marker = marker
   end
-
-  def play; end
-
 end
 
 class TTTGame
@@ -166,10 +163,6 @@ class TTTGame
     end
 
     answer == 'y'
-  end
-
-  def clear_screen
-    system 'clear'
   end
 
   def play
