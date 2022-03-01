@@ -12,6 +12,8 @@ class Board
     @squares[key].marker = marker
   end
 
+  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength
   def draw
     puts '     |     |'
     puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
@@ -25,6 +27,8 @@ class Board
     puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
     puts '     |     |'
   end
+  # rubocop:enable Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength
 
   def unmarked_keys
     @squares.keys.select { |key| @squares[key].unmarked? }
@@ -37,14 +41,6 @@ class Board
   def someone_won?
     !!winning_marker
   end
-
-  # def count_human_marker(squares)
-  #   squares.collect(&:marker).count(TTTGame::HUMAN_MARKER)
-  # end
-
-  # def count_computer_marker(squares)
-  #   squares.collect(&:marker).count(TTTGame::COMPUTER_MARKER)
-  # end
 
   def winning_marker
     WINNING_LINES.each do |line|
@@ -103,13 +99,46 @@ end
 class TTTGame
   HUMAN_MARKER = 'X'
   COMPUTER_MARKER = 'O'
+  FIRST_TO_MOVE = HUMAN_MARKER
 
   attr_reader :board, :human, :computer
+  attr_accessor :current_player
 
   def initialize
     @board = Board.new
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
+    @current_player = FIRST_TO_MOVE
+  end
+
+  def play
+    clear_screen
+    display_welcome_message
+    main_game
+    display_goodbye_message
+  end
+
+  private
+
+  def player_move
+    loop do
+      current_player_moves
+      break if board.someone_won? || board.full?
+
+      clear_screen_and_display_board if human_turn?
+    end
+  end
+
+  def main_game
+    loop do
+      display_board
+      player_move
+      display_result
+      break unless play_again?
+
+      reset
+      display_play_again_message
+    end
   end
 
   def display_welcome_message
@@ -134,6 +163,15 @@ class TTTGame
     puts ''
     board.draw
     puts ''
+  end
+
+  def current_player_moves
+    human_turn? ? human_moves : computer_moves
+    self.current_player = human_turn? ? COMPUTER_MARKER : HUMAN_MARKER
+  end
+
+  def human_turn?
+    current_player == HUMAN_MARKER
   end
 
   def human_moves
@@ -170,7 +208,7 @@ class TTTGame
     loop do
       puts 'Would you like to play again? (y/n)'
       answer = gets.chomp.downcase
-      break if %w[y n].include? answer
+      break if %w(y n).include? answer
 
       puts 'Sorry, must be y or n'
     end
@@ -180,39 +218,13 @@ class TTTGame
 
   def reset
     board.reset
+    self.current_player = FIRST_TO_MOVE
     clear_screen
   end
 
   def display_play_again_message
     puts "Let's play again!"
     puts ''
-  end
-
-  def play
-    clear_screen
-    display_welcome_message
-
-    loop do
-      display_board
-
-      loop do
-        human_moves
-        break if board.someone_won? || board.full?
-
-        computer_moves
-        break if board.someone_won? || board.full?
-
-        clear_screen_and_display_board
-      end
-
-      display_result
-      break unless play_again?
-
-      reset
-      display_play_again_message
-    end
-
-    display_goodbye_message
   end
 end
 

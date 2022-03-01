@@ -12,6 +12,8 @@ class Board
     @squares[key].marker = marker
   end
 
+  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength
   def draw
     puts '     |     |'
     puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
@@ -25,6 +27,8 @@ class Board
     puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
     puts '     |     |'
   end
+  # rubocop:enable Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength
 
   def unmarked_keys
     @squares.keys.select { |key| @squares[key].unmarked? }
@@ -37,14 +41,6 @@ class Board
   def someone_won?
     !!winning_marker
   end
-
-  # def count_human_marker(squares)
-  #   squares.collect(&:marker).count(TTTGame::HUMAN_MARKER)
-  # end
-
-  # def count_computer_marker(squares)
-  #   squares.collect(&:marker).count(TTTGame::COMPUTER_MARKER)
-  # end
 
   def winning_marker
     WINNING_LINES.each do |line|
@@ -103,30 +99,49 @@ end
 class TTTGame
   HUMAN_MARKER = 'X'
   COMPUTER_MARKER = 'O'
+  FIRST_TO_MOVE = HUMAN_MARKER
 
   attr_reader :board, :human, :computer
+  attr_accessor :current_player
 
   def initialize
     @board = Board.new
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
+    @current_player = FIRST_TO_MOVE
+  end
+
+  def play
+    clear_screen
+    display_welcome_message
+    main_game
+    display_goodbye_message
+  end
+
+  private
+
+  def clear_screen
+    system 'clear'
   end
 
   def display_welcome_message
     puts 'Welcome to Tic Tac Toe!/n'
   end
 
+  def main_game
+    loop do
+      display_board
+      player_move
+      display_result
+      break unless play_again?
+
+      reset
+      display_play_again_message
+    end
+  end
+
   def display_goodbye_message
     puts 'Thanks for playing Tic Tac Toe! Goodbye!'
-  end
-
-  def clear_screen
-    system 'clear'
-  end
-
-  def clear_screen_and_display_board
-    clear_screen
-    display_board
   end
 
   def display_board
@@ -136,12 +151,32 @@ class TTTGame
     puts ''
   end
 
+  def player_move
+    loop do
+      current_player_moves
+      break if board.someone_won? || board.full?
+
+      clear_screen_and_display_board if human_turn?
+    end
+  end
+
+  def current_player_moves
+    human_turn? ? human_moves : computer_moves
+    self.current_player = human_turn? ? COMPUTER_MARKER : HUMAN_MARKER
+  end
+
+  def human_turn?
+    current_player == HUMAN_MARKER
+  end
+
   def human_moves
-    puts "Choose a square (#{board.unmarked_keys.join(', ')})"
+    unmarked_keys = board.unmarked_keys
+
+    puts "Choose a square (#{joiner(unmarked_keys, ', ')})"
     square = nil
     loop do
       square = gets.chomp.to_i
-      break if board.unmarked_keys.include?(square)
+      break if unmarked_keys.include?(square)
 
       puts "Sorry, that's not a valid option."
     end
@@ -149,8 +184,25 @@ class TTTGame
     board[square] = human.marker
   end
 
+  def joiner(array, delimiter = ', ', final_separator = 'or')
+    case array.length
+    when 0 then ''
+    when 1 then array.first
+    when 2 then array.join(' #{final_separator} ')
+    else
+      # "#{array[0..-2].join(delimiter)}#{delimiter}#{final_separator} #{array[-1]}"
+      array[-1] = "#{final_separator} #{array[-1]}"
+      array.join(delimiter)
+    end
+  end
+
   def computer_moves
     board[board.unmarked_keys.sample] = computer.marker
+  end
+
+  def clear_screen_and_display_board
+    clear_screen
+    display_board
   end
 
   def display_result
@@ -170,7 +222,7 @@ class TTTGame
     loop do
       puts 'Would you like to play again? (y/n)'
       answer = gets.chomp.downcase
-      break if %w[y n].include? answer
+      break if %w(y n).include? answer
 
       puts 'Sorry, must be y or n'
     end
@@ -180,39 +232,13 @@ class TTTGame
 
   def reset
     board.reset
+    self.current_player = FIRST_TO_MOVE
     clear_screen
   end
 
   def display_play_again_message
     puts "Let's play again!"
     puts ''
-  end
-
-  def play
-    clear_screen
-    display_welcome_message
-
-    loop do
-      display_board
-
-      loop do
-        human_moves
-        break if board.someone_won? || board.full?
-
-        computer_moves
-        break if board.someone_won? || board.full?
-
-        clear_screen_and_display_board
-      end
-
-      display_result
-      break unless play_again?
-
-      reset
-      display_play_again_message
-    end
-
-    display_goodbye_message
   end
 end
 
