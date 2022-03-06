@@ -96,25 +96,44 @@ class Player
   end
 end
 
+# TTTGame should increment winner score
+# Player should hold score in state or held by TTTGame => Player could hold
+# but better if game holds it's own state because a player could be playing many games
+# game starts, players have score of 0
+# if player wins, increment score by 1. If tie increment both by 1
+# if either player score equals Threshold then game over.
+
 class TTTGame
   HUMAN_MARKER = 'X'
   COMPUTER_MARKER = 'O'
   FIRST_TO_MOVE = HUMAN_MARKER
+  SCORE_THRESHOLD = 5
 
   attr_reader :board, :human, :computer
-  attr_accessor :current_player
+  attr_accessor :current_player, :scores
 
   def initialize
     @board = Board.new
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
     @current_player = FIRST_TO_MOVE
+    @scores = {
+      HUMAN_MARKER => 0,
+      COMPUTER_MARKER => 0
+    }
   end
 
   def play
     clear_screen
     display_welcome_message
-    main_game
+    loop do
+      main_game
+      display_match_result
+      break unless play_again?
+
+      reset_match
+      display_play_again_message
+    end
     display_goodbye_message
   end
 
@@ -130,13 +149,14 @@ class TTTGame
 
   def main_game
     loop do
+      display_match_scores
       display_board
       player_move
-      display_result
-      break unless play_again?
+      increment_scores
+      display_game_result
+      break if player_won_match?
 
-      reset
-      display_play_again_message
+      reset_game
     end
   end
 
@@ -190,9 +210,7 @@ class TTTGame
     when 1 then array.first
     when 2 then array.join(' #{final_separator} ')
     else
-      # "#{array[0..-2].join(delimiter)}#{delimiter}#{final_separator} #{array[-1]}"
-      array[-1] = "#{final_separator} #{array[-1]}"
-      array.join(delimiter)
+      "#{array[0..-2].join(delimiter)}#{delimiter}#{final_separator} #{array[-1]}"
     end
   end
 
@@ -205,7 +223,23 @@ class TTTGame
     display_board
   end
 
-  def display_result
+  def increment_scores
+    case board.winning_marker
+    when human.marker
+      update_score(HUMAN_MARKER)
+    when computer.marker
+      update_score(COMPUTER_MARKER)
+    else
+      update_score(HUMAN_MARKER)
+      update_score(COMPUTER_MARKER)
+    end
+  end
+
+  def update_score(player_marker)
+    self.scores[player_marker] += 1
+  end
+
+  def display_game_result
     clear_screen_and_display_board
     case board.winning_marker
     when human.marker
@@ -217,10 +251,41 @@ class TTTGame
     end
   end
 
+  def display_match_scores
+    puts  "You have #{scores[HUMAN_MARKER]} and the computer has #{scores[COMPUTER_MARKER]}. " \
+          "It's first to #{SCORE_THRESHOLD}."
+  end
+
+  def reset_game
+    board.reset
+    self.current_player = FIRST_TO_MOVE
+  end
+
+  def player_won_match?
+    !match_winners.empty?
+  end
+
+  def match_winners
+    scores.select { |_, score| score == SCORE_THRESHOLD }.keys
+  end
+
+  def display_match_result
+    human_score = scores[HUMAN_MARKER]
+    computer_score = scores[COMPUTER_MARKER]
+    winners = match_winners
+    if winners.size == 2
+      puts "It's a tie! #{SCORE_THRESHOLD} each."
+    elsif winners.first == HUMAN_MARKER
+      puts "You won! #{human_score} to #{computer_score}."
+    elsif winners.first == COMPUTER_MARKER
+      puts "Computer won! #{computer_score} to #{human_score}."
+    end
+  end
+
   def play_again?
     answer = nil
     loop do
-      puts 'Would you like to play again? (y/n)'
+      puts 'Would you like to play another match? (y/n)'
       answer = gets.chomp.downcase
       break if %w(y n).include? answer
 
@@ -230,9 +295,12 @@ class TTTGame
     answer == 'y'
   end
 
-  def reset
-    board.reset
-    self.current_player = FIRST_TO_MOVE
+  def reset_match
+    self.scores = {
+      HUMAN_MARKER => 0,
+      COMPUTER_MARKER => 0
+    }
+    reset_game
     clear_screen
   end
 

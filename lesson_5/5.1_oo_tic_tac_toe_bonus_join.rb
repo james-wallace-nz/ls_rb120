@@ -190,9 +190,11 @@ class TTTGame
     when 1 then array.first
     when 2 then array.join(' #{final_separator} ')
     else
-      # "#{array[0..-2].join(delimiter)}#{delimiter}#{final_separator} #{array[-1]}"
-      array[-1] = "#{final_separator} #{array[-1]}"
-      array.join(delimiter)
+      "#{array[0..-2].join(delimiter)}#{delimiter}#{final_separator} #{array[-1]}"
+      # below functional programming solutoin doesn't work because it mutates the unmarked keys
+      # therefore, 9 doesn't work as an input
+      # array[-1] = "#{final_separator} #{array[-1]}"
+      # array.join(delimiter)
     end
   end
 
