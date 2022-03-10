@@ -50,6 +50,34 @@ class Board
     nil
   end
 
+  # rubocop:disable Metrics/MethodLength
+  def squares_threatened(marker)
+    squares_under_threat = []
+
+    # iterate through board winning lines
+    WINNING_LINES.each do |line|
+      squares = @squares.values_at(*line)
+      # two squares of winning line are human marker and third is empty
+      if two_taken_one_empty?(squares, marker)
+        # empty square instance
+        empty_square = empty_square(squares)
+
+        # index of empty square instance
+        empty_square_index = squares.index(empty_square)
+
+        # empty square key
+        square = line[empty_square_index]
+
+        # add to array
+        squares_under_threat.push(square)
+      end
+    end
+
+    # return array
+    squares_under_threat
+  end
+  # rubocop:enable Metrics/MethodLength
+
   def reset
     (1..9).each { |key| @squares[key] = Square.new }
   end
@@ -63,6 +91,15 @@ class Board
 
     # return true if lowest and highest marker are the same
     markers.min == markers.max
+  end
+
+  def two_taken_one_empty?(squares, marker)
+    squares.count { |square| square.marker == marker } == 2 &&
+      squares.count { |square| square.marker == Square::INITIAL_MARKER } == 1
+  end
+
+  def empty_square(squares)
+    squares.select(&:unmarked?).first
   end
 end
 
@@ -95,13 +132,6 @@ class Player
     @marker = marker
   end
 end
-
-# TTTGame should increment winner score
-# Player should hold score in state or held by TTTGame => Player could hold
-# but better if game holds it's own state because a player could be playing many games
-# game starts, players have score of 0
-# if player wins, increment score by 1. If tie increment both by 1
-# if either player score equals Threshold then game over.
 
 class TTTGame
   HUMAN_MARKER = 'X'
@@ -215,7 +245,10 @@ class TTTGame
   end
 
   def computer_moves
-    board[board.unmarked_keys.sample] = computer.marker
+    # determine if two squares of winning lines are human and third is empty
+    threatened_squares = board.squares_threatened(human.marker)
+    chosen_square = !threatened_squares.empty? ? threatened_squares.sample : board.unmarked_keys.sample
+    board[chosen_square] = computer.marker
   end
 
   def clear_screen_and_display_board
