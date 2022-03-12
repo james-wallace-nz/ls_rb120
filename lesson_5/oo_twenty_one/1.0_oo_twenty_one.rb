@@ -4,7 +4,7 @@ end
 
 class Participant
   include Hand
-  attr_reader :name
+  attr_reader :name, :hand
 
   def initialize(name)
     @hand = []
@@ -12,6 +12,7 @@ class Participant
   end
 
   def display_hand
+    puts "#{@name} has:"
     @hand.each do |card|
       puts card.to_s
     end
@@ -24,20 +25,68 @@ class Participant
   def busted?
     false
   end
+
+  def > other_participant
+    true
+  end
+
+  def == other_participant
+    true
+  end
+
+  private
+
+  def clear_screen
+    system 'clear'
+  end
 end
 
-class Player < Participant; end
+class Player < Participant
+  def initialize
+    super(enter_player_name)
+  end
+
+  def enter_player_name
+    name = nil
+    clear_screen
+    loop do
+      puts "What's your name?"
+      name = gets.chomp
+      break unless name == ''
+
+      clear_screen
+      puts 'Invalid name. Please enter at least one character'
+    end
+
+    name
+  end
+
+  def choose_move
+    move = nil
+    loop do
+      puts "What do you want to do? ('Hit' or 'h' / 'Stay' or 's'):"
+      move = gets.chomp.downcase
+      break if %w(hit h stay s).include? move
+
+      clear_screen
+      puts "Invalid move. Enter 'Hit' or 'h' / 'Stay' or 's'"
+    end
+    move
+  end
+end
 
 class Dealer < Participant
   def initialize
     super('Dealer')
   end
 
-  def deal_card(participant); end
-
   def display_first_card
     first_card = @hand.first
-    puts "#{@name} has #{first_card}"
+    puts "#{@name} has #{first_card} and an unknown card."
+  end
+
+  def choose_move
+    'stay'
   end
 end
 
@@ -60,6 +109,10 @@ class Deck
 
   def shuffle_deck!
     @deck.shuffle!
+  end
+
+  def deal_card(participant)
+    participant.hand.push(deck.shift)
   end
 
   private
@@ -94,48 +147,34 @@ end
 
 class Game
   def initialize
-    @player = Player.new(enter_player_name)
+    @player = Player.new
     @dealer = Dealer.new
   end
 
   def start
-    clear_screen
     display_welcome_message
 
     loop do
       game_loop
       break unless play_again?
 
-      clear_screen
       display_play_again_message
     end
 
-    clear_screen
     display_goodbye_message
   end
 
   private
-
-  def enter_player_name
-    name = nil
-    loop do
-      puts "What's your name?"
-      name = gets.chomp
-      break unless name == ''
-
-      clear_screen
-      puts 'Invalid name. Please enter at least one character'
-    end
-
-    name
-  end
 
   def clear_screen
     system 'clear'
   end
 
   def display_welcome_message
-    puts "Hi #{@player.name}! Welcome to Twenty One."
+    clear_screen
+    puts "Hi #{@player.name}!"
+    puts 'Welcome to Twenty One.'
+    puts ''
   end
 
   def game_loop
@@ -143,7 +182,10 @@ class Game
     deal_initial_cards
     display_hands_for_player
     player_turn
+    puts "#{@player.name} chose to stay..."
     dealer_turn
+    puts "#{@dealer.name} chose to stay..."
+    display_participant_cards
     display_game_result
   end
 
@@ -154,70 +196,80 @@ class Game
 
   def deal_initial_cards
     2.times do
-      @dealer.deal_card(@player)
-      @dealer.deal_card(@dealer)
+      @deck.deal_card(@player)
+      @deck.deal_card(@dealer)
     end
+    puts "Cards have been dealt..."
   end
 
   def display_hands_for_player
+    puts ''
     @dealer.display_first_card
-    @dealer.display_hand_value
+    puts ''
     @player.display_hand
+    puts ''
     @player.display_hand_value
+    puts ''
   end
 
   def player_turn
     loop do
-      move = choose_move
-      break if move == 'stay' || move == 's'
-      @dealer.deal_card(@player)
+      move = @player.choose_move
+      clear_screen
+      break if %w(stay s).include?(move)
+      puts "#{@player.name} choose to hit..."
+      @deck.deal_card(@player)
       break if @player.busted?
       display_hands_for_player
     end
   end
 
-  def display_participant_cards
-    @dealer.display_hand
-    @dealer.display_hand_value
-    @player.display_hand
-    @player.display_hand_value
-  end
-
-  def choose_move
-    move = nil
-    loop do
-      puts "What do you want to do? ('Hit' or 'h' / 'Stay' or 's'):"
-      move = gets.chomp.downcase
-      break if %w(hit h stay s).include? move
-
-      clear_screen
-      puts "Invalid move. Enter 'Hit' or 'h' / 'Stay' or 's'"
-    end
-    move
-  end
-
   def dealer_turn
     display_participant_cards
     loop do
-      move = 'stay' # dealer_move_logic
-      puts "#{@dealer.name} #{move}."
-      display_participant_cards
-      break if move == 'stay'
-      @dealer.deal_card(@dealer)
+      move = @dealer.choose_move
+      clear_screen
+      break if %w(stay).include?(move)
+      puts "#{@dealer.name} chose to hit..."
+      @deck.deal_card(@dealer)
       break if @dealer.busted?
+      display_participant_cards
     end
   end
 
+  def display_participant_cards
+    puts ''
+    @dealer.display_hand
+    @dealer.display_hand_value
+    puts ''
+    @player.display_hand
+    @player.display_hand_value
+    puts ''
+  end
+
   def display_game_result
-    # determine winner or tie
-    # display winner or tie
-    puts 'You win!'
+    winner = determine_winner
+    if winner == 'tie'
+      puts "It's a tie!"
+    else
+      puts "#{winner} wins the round!"
+    end
+  end
+
+  def determine_winner
+    if @player > @dealer
+      @player.name
+    elsif @player == @dealer
+      'tie'
+    else
+      @dealer.name
+    end
   end
 
   def play_again?
     answer = nil
-    clear_screen
     loop do
+      puts ''
       puts "Do you want to play again? ('Yes' or 'y' / 'No' of 'n'):"
       answer = gets.chomp.downcase
       break if %w(yes y no n).include?(answer)
@@ -225,14 +277,17 @@ class Game
       puts "Invalid answer. Enter 'Yes' or 'y' / 'No' of 'n'"
     end
 
-    answer == 'yes'
+    %w(yes y).include?(answer)
   end
 
   def display_play_again_message
+    clear_screen
     puts "Let's play another round!"
+    puts ''
   end
 
   def display_goodbye_message
+    clear_screen
     puts "Thanks for playing Twenty One, #{@player.name}!"
   end
 end
