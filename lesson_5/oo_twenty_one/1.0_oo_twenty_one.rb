@@ -1,14 +1,10 @@
-module Hand
-  def total_hand_value; end
-end
-
 class Participant
-  include Hand
-  attr_reader :name, :hand
+  attr_reader :name, :hand, :hand_values
 
   def initialize(name)
     @hand = []
     @name = name
+    @hand_values = []
   end
 
   def display_hand
@@ -18,26 +14,54 @@ class Participant
     end
   end
 
-  def display_hand_value
-    puts "#{@name} has a hand value of [number]."
+  def display_hand_values
+    if hand_values.length == 1
+      puts "#{@name} has a hand value of #{hand_values.first}."
+    else
+      puts "#{@name} has potential hand values of:"
+      hand_values.each do |hand_value|
+        puts hand_values if hand_value <= Game::TWENTY_ONE_THRESHOLD
+      end
+    end
+  end
+
+  def receive_card(card)
+    @hand.push(card)
+    @hand_values = determine_hand_values
   end
 
   def busted?
-    false
+    min_hand_value > Game::TWENTY_ONE_THRESHOLD
   end
 
-  def > other_participant
-    true
+  def >(other_participant)
+    max_hand_value > other_participant.max_hand_value
   end
 
-  def == other_participant
-    true
+  def ==(other_participant)
+    max_hand_value == other_participant.max_hand_value
   end
 
   private
 
   def clear_screen
     system 'clear'
+  end
+
+  def determine_hand_values
+    [hand.reduce(0) { |sum, card| sum + card.card_value }]
+  end
+
+  def min_hand_value
+    minimum = hand_values.min
+    minimum.nil? ? 0 : minimum
+  end
+
+  protected
+
+  def max_hand_value
+    maximum = hand_values.max
+    maximum.nil? ? 0 : maximum
   end
 end
 
@@ -86,7 +110,11 @@ class Dealer < Participant
   end
 
   def choose_move
-    'stay'
+    if max_hand_value >= Game::TWENTY_ONE_THRESHOLD
+      'stay'
+    else
+      'hit'
+    end
   end
 end
 
@@ -112,7 +140,7 @@ class Deck
   end
 
   def deal_card(participant)
-    participant.hand.push(deck.shift)
+    participant.receive_card(deck.shift)
   end
 
   private
@@ -146,6 +174,8 @@ class Card
 end
 
 class Game
+  TWENTY_ONE_THRESHOLD = 21
+
   def initialize
     @player = Player.new
     @dealer = Dealer.new
@@ -208,7 +238,7 @@ class Game
     puts ''
     @player.display_hand
     puts ''
-    @player.display_hand_value
+    @player.display_hand_values
     puts ''
   end
 
@@ -240,10 +270,10 @@ class Game
   def display_participant_cards
     puts ''
     @dealer.display_hand
-    @dealer.display_hand_value
+    @dealer.display_hand_values
     puts ''
     @player.display_hand
-    @player.display_hand_value
+    @player.display_hand_values
     puts ''
   end
 
