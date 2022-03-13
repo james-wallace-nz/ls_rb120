@@ -2,7 +2,7 @@ class Participant
   attr_reader :name, :hand, :hand_values
 
   def initialize(name)
-    @hand = []
+    new_hand
     @name = name
     @hand_values = []
   end
@@ -23,6 +23,11 @@ class Participant
         puts hand_values if hand_value <= Game::TWENTY_ONE_THRESHOLD
       end
     end
+  end
+
+  def new_hand
+    @hand = []
+    @hand_values = determine_hand_values
   end
 
   def receive_card(card)
@@ -209,6 +214,7 @@ class Game
 
   def game_loop
     create_shuffled_deck
+    clear_participant_hands
     deal_initial_cards
     display_hands_for_player
     player_turn
@@ -222,6 +228,11 @@ class Game
   def create_shuffled_deck
     @deck = Deck.new
     @deck.shuffle_deck!
+  end
+
+  def clear_participant_hands
+    @player.new_hand
+    @dealer.new_hand
   end
 
   def deal_initial_cards
