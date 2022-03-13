@@ -1,5 +1,5 @@
 class Participant
-  attr_reader :name, :hand, :hand_values
+  attr_reader :name
 
   def initialize(name)
     new_hand
@@ -15,8 +15,8 @@ class Participant
   end
 
   def display_hand_values
-    if hand_values.length == 1
-      puts "#{@name} has a hand value of #{hand_values.first}."
+    if @hand_values.length == 1
+      puts "#{@name} has a hand value of #{@hand_values.first}."
     else
       puts "#{@name} has potential hand values of:"
       hand_values.each do |hand_value|
@@ -62,18 +62,18 @@ class Participant
   end
 
   def determine_hand_values
-    [hand.reduce(0) { |sum, card| sum + card.card_value }]
+    [@hand.reduce(0) { |sum, card| sum + card.card_value }]
   end
 
   def min_hand_value
-    minimum = hand_values.min
+    minimum = @hand_values.min
     minimum.nil? ? 0 : minimum
   end
 
   protected
 
   def max_hand_value
-    maximum = hand_values.max
+    maximum = @hand_values.max
     maximum.nil? ? 0 : maximum
   end
 end
@@ -144,14 +144,12 @@ class Deck
   FACE_VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace']
   CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11] # [1, 10]]
 
-  attr_accessor :deck
-
   def initialize
     @deck = create_new_deck
   end
 
   def to_s
-    deck.each do |card|
+    @deck.each do |card|
       puts card
     end
   end
@@ -160,8 +158,8 @@ class Deck
     @deck.shuffle!
   end
 
-  def deal_card(participant, display = true)
-    card = deck.shift
+  def deal_card(participant, display: true)
+    card = @deck.shift
     participant.receive_card(card)
     participant.display_card(card, display)
   end
@@ -255,7 +253,7 @@ class Game
   def deal_initial_cards
     2.times do
       @deck.deal_card(@player)
-      @deck.deal_card(@dealer, false)
+      @deck.deal_card(@dealer, display: false)
     end
     puts "Cards have been dealt..."
   end
