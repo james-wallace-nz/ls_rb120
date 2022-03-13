@@ -35,6 +35,14 @@ class Participant
     @hand_values = determine_hand_values
   end
 
+  def display_card(card, display)
+    if @hand.length == 1 || display
+      puts "#{name} dealt a #{card}"
+    else
+      puts "#{name} dealt an unknown card"
+    end
+  end
+
   def busted?
     min_hand_value > Game::TWENTY_ONE_THRESHOLD
   end
@@ -95,16 +103,28 @@ class Player < Participant
     loop do
       puts "What do you want to do? ('Hit' or 'h' / 'Stay' or 's'):"
       move = gets.chomp.downcase
-      break if %w(hit h stay s).include? move
+      move = normalize(move)
+      break if %w(hit stay).include? move
 
       clear_screen
       puts "Invalid move. Enter 'Hit' or 'h' / 'Stay' or 's'"
     end
     move
   end
+
+  private
+
+  def normalize(move)
+    case move
+    when 's' then 'stay'
+    when 'h' then 'hit'
+    end
+  end
 end
 
 class Dealer < Participant
+  HIT_THRESHOLD = 17
+
   def initialize
     super('Dealer')
   end
@@ -115,11 +135,7 @@ class Dealer < Participant
   end
 
   def choose_move
-    if max_hand_value >= Game::TWENTY_ONE_THRESHOLD
-      'stay'
-    else
-      'hit'
-    end
+    max_hand_value >= HIT_THRESHOLD ? 'stay' : 'hit'
   end
 end
 
@@ -144,8 +160,10 @@ class Deck
     @deck.shuffle!
   end
 
-  def deal_card(participant)
-    participant.receive_card(deck.shift)
+  def deal_card(participant, display = true)
+    card = deck.shift
+    participant.receive_card(card)
+    participant.display_card(card, display)
   end
 
   private
@@ -191,6 +209,8 @@ class Game
 
     loop do
       game_loop
+      display_participant_cards
+      participant_busted? ? display_busted : display_winner
       break unless play_again?
 
       display_play_again_message
@@ -218,11 +238,8 @@ class Game
     deal_initial_cards
     display_hands_for_player
     player_turn
-    puts "#{@player.name} chose to stay..."
+    return if @player.busted?
     dealer_turn
-    puts "#{@dealer.name} chose to stay..."
-    display_participant_cards
-    display_game_result
   end
 
   def create_shuffled_deck
@@ -238,7 +255,7 @@ class Game
   def deal_initial_cards
     2.times do
       @deck.deal_card(@player)
-      @deck.deal_card(@dealer)
+      @deck.deal_card(@dealer, false)
     end
     puts "Cards have been dealt..."
   end
@@ -257,8 +274,8 @@ class Game
     loop do
       move = @player.choose_move
       clear_screen
-      break if %w(stay s).include?(move)
-      puts "#{@player.name} choose to hit..."
+      puts "#{@player.name} choose to #{move}..."
+      break if move == 'stay'
       @deck.deal_card(@player)
       break if @player.busted?
       display_hands_for_player
@@ -266,15 +283,13 @@ class Game
   end
 
   def dealer_turn
-    display_participant_cards
     loop do
       move = @dealer.choose_move
-      clear_screen
-      break if %w(stay).include?(move)
-      puts "#{@dealer.name} chose to hit..."
+      puts ''
+      puts "#{@dealer.name} choose to #{move}..."
+      break if move == 'stay'
       @deck.deal_card(@dealer)
       break if @dealer.busted?
-      display_participant_cards
     end
   end
 
@@ -288,13 +303,23 @@ class Game
     puts ''
   end
 
-  def display_game_result
-    winner = determine_winner
-    if winner == 'tie'
-      puts "It's a tie!"
-    else
-      puts "#{winner} wins the round!"
+  def participant_busted?
+    @player.busted? || @dealer.busted?
+  end
+
+  def display_busted
+    if @player.busted?
+      puts "#{@player.name} busts!!"
+      puts "#{@dealer.name} wins!"
+    elsif @dealer.busted?
+      puts "#{@dealer.name} busts!!"
+      puts "#{@player.name} wins!"
     end
+  end
+
+  def display_winner
+    winner = determine_winner
+    puts winner == 'tie' ? "It's a tie!" : "#{winner} wins the round!"
   end
 
   def determine_winner
