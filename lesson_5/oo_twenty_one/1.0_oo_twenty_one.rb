@@ -1,3 +1,5 @@
+require 'pry'
+
 class Participant
   attr_reader :name
 
@@ -15,14 +17,17 @@ class Participant
   end
 
   def display_hand_values
-    if @hand_values.length == 1
-      puts "#{@name} has a hand value of #{@hand_values.first}."
+    values = values_below_threshold(@hand_values).sort!
+    if values.length == 1
+      puts "#{@name} has a hand value of #{values.first}."
     else
-      puts "#{@name} has potential hand values of:"
-      hand_values.each do |hand_value|
-        puts hand_values if hand_value <= Game::TWENTY_ONE_THRESHOLD
-      end
+      puts "#{@name} has potential hand values of: #{joiner(values, ', ')}"
     end
+  end
+
+  def display_max_hand_value
+    values = values_below_threshold(@hand_values)
+    puts "#{@name} has a hand value of #{values.max}."
   end
 
   def new_hand
@@ -48,6 +53,7 @@ class Participant
   end
 
   def >(other_participant)
+    puts "#{max_hand_value} > #{other_participant.max_hand_value}"
     max_hand_value > other_participant.max_hand_value
   end
 
@@ -61,8 +67,60 @@ class Participant
     system 'clear'
   end
 
+  def values_below_threshold(hand_values)
+    values = hand_values.select do |hand_value|
+      hand_value <= Game::TWENTY_ONE_THRESHOLD
+    end
+    values.empty? ? [hand_values.min] : values
+  end
+
+  def joiner(array, delimiter = ', ', final_separator = 'or')
+    case array.length
+    when 0 then ''
+    when 1 then array.first
+    when 2 then array.join(" #{final_separator} ")
+    else
+      "#{array[0..-2].join(delimiter)}#{delimiter}#{final_separator} #{array[-1]}"
+    end
+  end
+
   def determine_hand_values
-    [@hand.reduce(0) { |sum, card| sum + card.card_value }]
+    # extract aces from hand
+    non_aces, aces = @hand.partition { |card| card.face_value != 'Ace' }
+
+    # sum non-ace card values
+    non_aces_sum = sum_non_aces(non_aces)
+
+    # sum possible ace permutations
+    ace_permutations_sum = possible_ace_values(aces)
+
+    # add non-ace card values to ace permutations
+    possible_hand_values = possible_hand_values(non_aces_sum, ace_permutations_sum)
+
+    aces.empty? ? [non_aces_sum] : possible_hand_values
+  end
+
+  def sum_non_aces(non_aces)
+    non_aces.reduce(0) do |sum, card|
+      sum + card.card_value
+    end
+  end
+
+  def possible_ace_values(aces)
+    # extract ace values nested array
+    ace_values = aces.map(&:card_value)
+
+    # determine uniq ace permutations
+    ace_permutations = ace_values.flatten.permutation(aces.length).to_a.uniq
+
+    # sum ace permutations
+    ace_permutations.map(&:sum).uniq
+  end
+
+  def possible_hand_values(non_aces_sum, ace_permutations_sum)
+    ace_permutations_sum.map do |value|
+      value + non_aces_sum
+    end
   end
 
   def min_hand_value
@@ -73,7 +131,7 @@ class Participant
   protected
 
   def max_hand_value
-    maximum = @hand_values.max
+    maximum = values_below_threshold(@hand_values).max
     maximum.nil? ? 0 : maximum
   end
 end
@@ -142,7 +200,7 @@ end
 class Deck
   SUITS = ['Diamonds', 'Hearts', 'Spades', 'Clubs']
   FACE_VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace']
-  CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11] # [1, 10]]
+  CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, [1, 10]]
 
   def initialize
     @deck = create_new_deck
@@ -207,7 +265,7 @@ class Game
 
     loop do
       game_loop
-      display_participant_cards
+      display_final_participant_cards
       participant_busted? ? display_busted : display_winner
       break unless play_again?
 
@@ -291,13 +349,13 @@ class Game
     end
   end
 
-  def display_participant_cards
+  def display_final_participant_cards
     puts ''
     @dealer.display_hand
-    @dealer.display_hand_values
+    @dealer.display_max_hand_value
     puts ''
     @player.display_hand
-    @player.display_hand_values
+    @player.display_max_hand_value
     puts ''
   end
 
