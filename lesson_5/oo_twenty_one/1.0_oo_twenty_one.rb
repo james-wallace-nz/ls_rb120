@@ -1,5 +1,3 @@
-require 'pry'
-
 class Participant
   attr_reader :name
 
@@ -7,27 +5,6 @@ class Participant
     new_hand
     @name = name
     @hand_values = []
-  end
-
-  def display_hand
-    puts "#{@name} has:"
-    @hand.each do |card|
-      puts card.to_s
-    end
-  end
-
-  def display_hand_values
-    values = values_below_threshold(@hand_values).sort!
-    if values.length == 1
-      puts "#{@name} has a hand value of #{values.first}."
-    else
-      puts "#{@name} has potential hand values of: #{joiner(values, ', ')}"
-    end
-  end
-
-  def display_max_hand_value
-    values = values_below_threshold(@hand_values)
-    puts "#{@name} has a hand value of #{values.max}."
   end
 
   def new_hand
@@ -40,25 +17,49 @@ class Participant
     @hand_values = determine_hand_values
   end
 
-  def display_card(card, display)
-    if @hand.length == 1 || display
+  def display_card(card, display_after_first)
+    if @hand.length == 1 || display_after_first
       puts "#{name} dealt a #{card}"
     else
       puts "#{name} dealt an unknown card"
     end
   end
 
+  def display_hand
+    puts "#{name} has:"
+    @hand.each do |card|
+      puts card.to_s
+    end
+  end
+
+  def display_hand_values
+    playable_values = values_below_threshold.sort!
+    if playable_values.length == 1
+      puts "#{name} has a hand value of #{playable_values.first}."
+    else
+      puts "#{name} has potential hand values of: #{joiner(playable_values, ', ')}"
+    end
+  end
+
+  def display_max_hand_value
+    max_playable_value = values_below_threshold.max
+    puts "#{name} has a hand value of #{max_playable_value}."
+  end
+
+  def display_move(move)
+    puts "#{name} choose to #{move}..."
+  end
+
   def busted?
-    min_hand_value > Game::TWENTY_ONE_THRESHOLD
+    min_playable_hand_value > Game::TWENTY_ONE_THRESHOLD
   end
 
   def >(other_participant)
-    puts "#{max_hand_value} > #{other_participant.max_hand_value}"
-    max_hand_value > other_participant.max_hand_value
+    max_playable_hand_value > other_participant.max_playable_hand_value
   end
 
   def ==(other_participant)
-    max_hand_value == other_participant.max_hand_value
+    max_playable_hand_value == other_participant.max_playable_hand_value
   end
 
   private
@@ -67,11 +68,11 @@ class Participant
     system 'clear'
   end
 
-  def values_below_threshold(hand_values)
-    values = hand_values.select do |hand_value|
+  def values_below_threshold
+    playable_values = @hand_values.select do |hand_value|
       hand_value <= Game::TWENTY_ONE_THRESHOLD
     end
-    values.empty? ? [hand_values.min] : values
+    playable_values.empty? ? [@hand_values.min] : playable_values
   end
 
   def joiner(array, delimiter = ', ', final_separator = 'or')
@@ -85,7 +86,7 @@ class Participant
   end
 
   def determine_hand_values
-    # extract aces from hand
+    # extract non-aces and aces from hand
     non_aces, aces = @hand.partition { |card| card.face_value != 'Ace' }
 
     # sum non-ace card values
@@ -123,15 +124,15 @@ class Participant
     end
   end
 
-  def min_hand_value
+  def min_playable_hand_value
     minimum = @hand_values.min
     minimum.nil? ? 0 : minimum
   end
 
   protected
 
-  def max_hand_value
-    maximum = values_below_threshold(@hand_values).max
+  def max_playable_hand_value
+    maximum = values_below_threshold.max
     maximum.nil? ? 0 : maximum
   end
 end
@@ -189,11 +190,11 @@ class Dealer < Participant
 
   def display_first_card
     first_card = @hand.first
-    puts "#{@name} has #{first_card} and an unknown card."
+    puts "#{name} has #{first_card} and an unknown card."
   end
 
   def choose_move
-    max_hand_value >= HIT_THRESHOLD ? 'stay' : 'hit'
+    max_playable_hand_value >= HIT_THRESHOLD ? 'stay' : 'hit'
   end
 end
 
@@ -216,10 +217,10 @@ class Deck
     @deck.shuffle!
   end
 
-  def deal_card(participant, display: true)
+  def deal_card(participant, display_after_first: true)
     card = @deck.shift
     participant.receive_card(card)
-    participant.display_card(card, display)
+    participant.display_card(card, display_after_first)
   end
 
   private
@@ -292,9 +293,9 @@ class Game
     create_shuffled_deck
     clear_participant_hands
     deal_initial_cards
-    display_hands_for_player
+    display_participant_hands_for_player
     player_turn
-    return if @player.busted?
+    return if participant_busted?
     dealer_turn
   end
 
@@ -311,12 +312,12 @@ class Game
   def deal_initial_cards
     2.times do
       @deck.deal_card(@player)
-      @deck.deal_card(@dealer, display: false)
+      @deck.deal_card(@dealer, display_after_first: false)
     end
     puts "Cards have been dealt..."
   end
 
-  def display_hands_for_player
+  def display_participant_hands_for_player
     puts ''
     @dealer.display_first_card
     puts ''
@@ -330,11 +331,11 @@ class Game
     loop do
       move = @player.choose_move
       clear_screen
-      puts "#{@player.name} choose to #{move}..."
+      @player.display_move(move)
       break if move == 'stay'
       @deck.deal_card(@player)
       break if @player.busted?
-      display_hands_for_player
+      display_participant_hands_for_player
     end
   end
 
@@ -342,7 +343,7 @@ class Game
     loop do
       move = @dealer.choose_move
       puts ''
-      puts "#{@dealer.name} choose to #{move}..."
+      @dealer.display_move(move)
       break if move == 'stay'
       @deck.deal_card(@dealer)
       break if @dealer.busted?
