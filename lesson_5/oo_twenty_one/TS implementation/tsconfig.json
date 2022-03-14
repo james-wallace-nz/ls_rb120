@@ -16,8 +16,9 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
-    "types": ["node"]
+    // "types": ["node", "lodash"],
+    "outDir": "./build"
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "ts/name.oldts"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }

@@ -1,0 +1,33 @@
+const readline = require("readline");
+
+function enterPlayerName(): string {
+  console.clear();
+  const playerName: string = recursiveAsyncReadLine(
+    "What's your name?\n",
+    "Invalid name. Please enter at least one character"
+  );
+  return playerName;
+}
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+const recursiveAsyncReadLine = function (
+  question: string,
+  invalid: string
+): string {
+  return rl.question(question, function (answer: string) {
+    if (answer !== "") {
+      rl.close();
+      return answer;
+    } else {
+      console.clear();
+      console.log(invalid);
+      return recursiveAsyncReadLine(question, invalid);
+    }
+  });
+};
+
+console.log(enterPlayerName());
