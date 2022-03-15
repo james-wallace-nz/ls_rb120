@@ -15,9 +15,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _Participant_handValues;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Dealer = exports.Player = exports.Participant = void 0;
 const readline_sync_1 = __importDefault(require("readline-sync"));
 const _ = require("lodash");
 require("lodash.permutations");
+const game_1 = __importDefault(require("./game"));
 function userInput(question) {
     return readline_sync_1.default.question(question);
 }
@@ -65,7 +67,7 @@ class Participant {
         console.log(`${this.name} choose to ${move}...`);
     }
     busted() {
-        return this.minPlayableHandValue() > Game.twentyOneThreshold;
+        return this.minPlayableHandValue() > game_1.default.twentyOneThreshold;
     }
     greaterThan(otherParticipant) {
         return (this.maxPlayableHandValue() > otherParticipant.maxPlayableHandValue());
@@ -78,7 +80,7 @@ class Participant {
     }
     valuesBelowThreshold() {
         const playableValues = __classPrivateFieldGet(this, _Participant_handValues, "f").filter((handValue) => {
-            return handValue <= Game.twentyOneThreshold;
+            return handValue <= game_1.default.twentyOneThreshold;
         });
         return playableValues.length === 0
             ? [Math.min(...__classPrivateFieldGet(this, _Participant_handValues, "f"))]
@@ -136,6 +138,7 @@ class Participant {
         return maximum === undefined ? 0 : maximum;
     }
 }
+exports.Participant = Participant;
 _Participant_handValues = new WeakMap();
 class Player extends Participant {
     constructor(name) {
@@ -171,6 +174,7 @@ class Player extends Participant {
         }
     }
 }
+exports.Player = Player;
 class Dealer extends Participant {
     constructor() {
         super("Dealer");
@@ -184,242 +188,5 @@ class Dealer extends Participant {
         return this.maxPlayableHandValue() >= this.hitThreshold ? "stay" : "hit";
     }
 }
-class Deck {
-    constructor() {
-        this.suits = ["Diamonds", "Hearts", "Spades", "Clubs"];
-        this.faceValues = [
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9",
-            "10",
-            "Jack",
-            "Queen",
-            "King",
-            "Ace",
-        ];
-        this.cardValues = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, [1, 10]];
-        this.deck = this.createNewDeck();
-    }
-    toString() {
-        this.deck.forEach((card) => console.log(card));
-    }
-    shuffleDeck() {
-        this.deck = _.shuffle(this.deck);
-    }
-    dealCard(participant, displayAfterFirst = true) {
-        const card = this.deck.shift();
-        if (card instanceof Card) {
-            participant.receiveCard(card);
-            participant.displayCard(card, displayAfterFirst);
-        }
-    }
-    createNewDeck() {
-        const tempDeck = [];
-        this.suits.forEach((suit) => {
-            this.faceValues.forEach((faceValue, index) => {
-                const cardValue = this.cardValues[index];
-                const newCard = new Card(suit, faceValue, cardValue);
-                tempDeck.push(newCard);
-            });
-        });
-        return tempDeck;
-    }
-}
-class Card {
-    constructor(suit, faceValue, cardValue) {
-        this.suit = suit;
-        this.faceValue = faceValue;
-        this.cardValue = cardValue;
-    }
-    toString() {
-        return `${this.faceValue} of ${this.suit}`;
-    }
-}
-class Game {
-    constructor(playerName) {
-        this.player = new Player(playerName);
-        this.dealer = new Dealer();
-        this.deck = new Deck();
-    }
-    start() {
-        this.displayWelcomeMessage();
-        let loop = true;
-        while (loop) {
-            this.gameLoop();
-            this.displayFinalParticipantCards();
-            this.participantBusted() ? this.displayBusted() : this.displayWinner();
-            if (!this.playAgain()) {
-                loop = false;
-                break;
-            }
-            this.displayPlayAgainMessage();
-        }
-        this.displayGoodbyeMessage();
-    }
-    clearScreen() {
-        console.clear();
-    }
-    static get twentyOneThreshold() {
-        return 21;
-    }
-    displayWelcomeMessage() {
-        this.clearScreen();
-        console.log(`Hi ${this.player.name}!`);
-        console.log("Welcome to Twenty One.");
-        console.log("");
-    }
-    gameLoop() {
-        this.createShuffledDeck();
-        this.clearParticipantHands();
-        this.dealInitialCards();
-        this.displayParticipantHandsForPlayer();
-        this.playerTurn();
-        if (this.participantBusted()) {
-            return;
-        }
-        this.dealerTurn();
-    }
-    createShuffledDeck() {
-        this.deck = new Deck();
-        this.deck.shuffleDeck();
-    }
-    clearParticipantHands() {
-        this.player.newHand();
-        this.dealer.newHand();
-    }
-    dealInitialCards() {
-        for (let i = 0; i < 2; i++) {
-            this.deck.dealCard(this.player);
-            this.deck.dealCard(this.dealer, false);
-            i + 1;
-        }
-        console.log("Cards have been dealt...");
-    }
-    displayParticipantHandsForPlayer() {
-        console.log("");
-        this.dealer.displayFirstCard();
-        console.log("");
-        this.player.displayHand();
-        console.log("");
-        this.player.displayHandValues();
-        console.log("");
-    }
-    playerTurn() {
-        let loop = true;
-        while (loop) {
-            const move = this.player.chooseMove();
-            this.clearScreen();
-            this.player.displayMove(move);
-            if (move == "stay") {
-                loop = false;
-                break;
-            }
-            this.deck.dealCard(this.player);
-            if (this.player.busted()) {
-                break;
-            }
-            this.displayParticipantHandsForPlayer();
-        }
-    }
-    dealerTurn() {
-        let loop = true;
-        while (loop) {
-            const move = this.dealer.chooseMove();
-            console.log("");
-            this.dealer.displayMove(move);
-            if (move == "stay") {
-                loop = false;
-                break;
-            }
-            this.deck.dealCard(this.dealer);
-            if (this.dealer.busted()) {
-                break;
-            }
-        }
-    }
-    displayFinalParticipantCards() {
-        console.log("");
-        this.dealer.displayHand();
-        this.dealer.displayMaxHandValue();
-        console.log("");
-        this.player.displayHand();
-        this.player.displayMaxHandValue();
-        console.log("");
-    }
-    participantBusted() {
-        return this.player.busted() || this.dealer.busted();
-    }
-    displayBusted() {
-        if (this.player.busted()) {
-            console.log(`${this.player.name} busts!!`);
-            console.log(`${this.dealer.name} wins!`);
-        }
-        else if (this.dealer.busted()) {
-            console.log(`${this.dealer.name} busts!!`);
-            console.log(`${this.player.name} wins!`);
-        }
-    }
-    displayWinner() {
-        const winner = this.determineWinner();
-        winner == "tie"
-            ? console.log("It's a tie!")
-            : console.log(`${winner} wins the round!`);
-    }
-    determineWinner() {
-        if (this.player.greaterThan(this.dealer)) {
-            return this.player.name;
-        }
-        else if (this.player.equalTo(this.dealer)) {
-            return "tie";
-        }
-        else {
-            return this.dealer.name;
-        }
-    }
-    playAgain() {
-        let answer = "";
-        let loop = true;
-        while (loop) {
-            answer = userInput("Do you want to play again? ('Yes' or 'y' / 'No' of 'n'):\n");
-            if (["yes", "y", "no", "n"].includes(answer)) {
-                loop = false;
-                break;
-            }
-            console.log("Invalid answer. Enter 'Yes' or 'y' / 'No' of 'n'");
-        }
-        return ["yes", "y"].includes(answer);
-    }
-    displayPlayAgainMessage() {
-        this.clearScreen();
-        console.log("Let's play another round!");
-        console.log("");
-    }
-    displayGoodbyeMessage() {
-        this.clearScreen();
-        console.log(`Thanks for playing Twenty One, ${this.player.name}!`);
-    }
-}
-function enterPlayerName() {
-    console.clear();
-    let playerName = "";
-    let loop = true;
-    while (loop) {
-        playerName = userInput("What's your name?\n");
-        if (playerName !== "") {
-            loop = false;
-            break;
-        }
-        console.clear();
-        console.log("Invalid name. Please enter at least one character");
-    }
-    return playerName;
-}
-const playerName = enterPlayerName();
-const game = new Game(playerName);
-game.start();
-//# sourceMappingURL=game.js.map
+exports.Dealer = Dealer;
+//# sourceMappingURL=participants.js.map

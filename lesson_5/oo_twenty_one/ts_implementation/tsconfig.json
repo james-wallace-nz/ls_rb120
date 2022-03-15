@@ -17,7 +17,7 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     // "types": ["node", "lodash"],
-    "outDir": "./build"
+    "outDir": "./js_build"
   },
   "include": ["**/*.ts", "ts/name.oldts"],
   "exclude": ["node_modules", "**/*.spec.ts"]
