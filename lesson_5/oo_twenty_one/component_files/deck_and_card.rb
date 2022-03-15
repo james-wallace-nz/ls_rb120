@@ -1,7 +1,7 @@
 class Deck
   SUITS = ['Diamonds', 'Hearts', 'Spades', 'Clubs']
   FACE_VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace']
-  CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, [1, 10]]
+  CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, [1, 11]]
 
   def initialize
     @deck = create_new_deck
