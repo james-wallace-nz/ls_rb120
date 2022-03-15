@@ -1,24 +1,44 @@
 "use strict";
-require("lodash.permutations");
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var _Participant_handValues;
+Object.defineProperty(exports, "__esModule", { value: true });
+const readline_sync_1 = __importDefault(require("readline-sync"));
 const _ = require("lodash");
-const readline = require("readline");
+require("lodash.permutations");
+function userInput(question) {
+    return readline_sync_1.default.question(question);
+}
 class Participant {
     constructor(name) {
+        _Participant_handValues.set(this, void 0);
         this.name = name;
         this._hand = [];
-        this._handValues = [];
+        __classPrivateFieldSet(this, _Participant_handValues, [], "f");
     }
     newHand() {
         this._hand = [];
-        this._handValues = this.determineHandValues();
+        __classPrivateFieldSet(this, _Participant_handValues, this.determineHandValues(), "f");
     }
     receiveCard(card) {
         this._hand.push(card);
-        this._handValues = this.determineHandValues();
+        __classPrivateFieldSet(this, _Participant_handValues, this.determineHandValues(), "f");
     }
     displayCard(card, displayAfterFirst) {
         if (this._hand.length === 1 || displayAfterFirst) {
-            console.log(`${this.name} dealt a ${card}`);
+            console.log(`${this.name} dealt a ${card.toString()}`);
         }
         else {
             console.log(`${this.name} dealt an unknown card`);
@@ -45,7 +65,7 @@ class Participant {
         console.log(`${this.name} choose to ${move}...`);
     }
     busted() {
-        return this.minPlayableHandValue() > 21;
+        return this.minPlayableHandValue() > Game.twentyOneThreshold;
     }
     greaterThan(otherParticipant) {
         return (this.maxPlayableHandValue() > otherParticipant.maxPlayableHandValue());
@@ -57,11 +77,11 @@ class Participant {
         console.clear();
     }
     valuesBelowThreshold() {
-        const playableValues = this._handValues.filter((handValue) => {
-            return handValue <= 21;
+        const playableValues = __classPrivateFieldGet(this, _Participant_handValues, "f").filter((handValue) => {
+            return handValue <= Game.twentyOneThreshold;
         });
         return playableValues.length === 0
-            ? [Math.min(...this._handValues)]
+            ? [Math.min(...__classPrivateFieldGet(this, _Participant_handValues, "f"))]
             : playableValues;
     }
     joiner(array, delimiter = ", ", finalSeparator = "or") {
@@ -108,7 +128,7 @@ class Participant {
         return acePermutationsSum.map((value) => value + nonAcesSum);
     }
     minPlayableHandValue() {
-        const minimum = Math.min(...this._handValues);
+        const minimum = Math.min(...__classPrivateFieldGet(this, _Participant_handValues, "f"));
         return minimum === undefined ? 0 : minimum;
     }
     maxPlayableHandValue() {
@@ -116,31 +136,26 @@ class Participant {
         return maximum === undefined ? 0 : maximum;
     }
 }
+_Participant_handValues = new WeakMap();
 class Player extends Participant {
     constructor(name) {
         super(name);
     }
     chooseMove() {
         let move = "";
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
-        rl.on("close", function () {
-            process.exit(0);
-        });
         let loop = true;
         while (loop) {
-            move = rl.question("What do you want to do? ('Hit' or 'h' / 'Stay' or 's'):", function (move) {
-                switch (move) {
-                    case "s":
-                        return "stay";
-                    case "h":
-                        return "hit";
-                    default:
-                        return move;
-                }
-            });
+            move = userInput("What do you want to do? ('Hit' or 'h' / 'Stay' or 's'):").toLowerCase();
+            switch (move) {
+                case "s":
+                    move = "stay";
+                    break;
+                case "h":
+                    move = "hit";
+                    break;
+                default:
+                    break;
+            }
             if (["hit", "stay"].includes(move)) {
                 loop = false;
                 break;
@@ -148,8 +163,7 @@ class Player extends Participant {
             this.clearScreen();
             console.log("Invalid move. Enter 'Hit' or 'h' / 'Stay' or 's'");
         }
-        rl.close();
-        if (move === "hit" || move == "stay") {
+        if (move === "hit" || move === "stay") {
             return move;
         }
         else {
@@ -188,31 +202,17 @@ class Deck {
             "King",
             "Ace",
         ];
-        this.cardValues = [
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            10,
-            10,
-            10,
-            [1, 10],
-        ];
+        this.cardValues = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, [1, 10]];
         this.deck = this.createNewDeck();
     }
     toString() {
         this.deck.forEach((card) => console.log(card));
     }
     shuffleDeck() {
-        return _.shuffle(this.deck);
+        this.deck = _.shuffle(this.deck);
     }
     dealCard(participant, displayAfterFirst = true) {
-        const card = this.deck.shift;
+        const card = this.deck.shift();
         if (card instanceof Card) {
             participant.receiveCard(card);
             participant.displayCard(card, displayAfterFirst);
@@ -237,12 +237,11 @@ class Card {
         this.cardValue = cardValue;
     }
     toString() {
-        `${this.faceValue} of ${this.suit}`;
+        return `${this.faceValue} of ${this.suit}`;
     }
 }
 class Game {
     constructor(playerName) {
-        this.twentyOneThreshold = 21;
         this.player = new Player(playerName);
         this.dealer = new Dealer();
         this.deck = new Deck();
@@ -263,6 +262,10 @@ class Game {
         this.displayGoodbyeMessage();
     }
     clearScreen() {
+        console.clear();
+    }
+    static get twentyOneThreshold() {
+        return 21;
     }
     displayWelcomeMessage() {
         this.clearScreen();
@@ -379,28 +382,16 @@ class Game {
         }
     }
     playAgain() {
-        let answer;
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
-        rl.on("close", function () {
-            process.exit(0);
-        });
+        let answer = "";
         let loop = true;
         while (loop) {
-            console.log("");
-            answer = rl.question("Do you want to play again? ('Yes' or 'y' / 'No' of 'n'):", function (answer) {
-                return answer;
-            });
+            answer = userInput("Do you want to play again? ('Yes' or 'y' / 'No' of 'n'):\n");
             if (["yes", "y", "no", "n"].includes(answer)) {
                 loop = false;
                 break;
             }
-            this.clearScreen();
             console.log("Invalid answer. Enter 'Yes' or 'y' / 'No' of 'n'");
         }
-        rl.close();
         return ["yes", "y"].includes(answer);
     }
     displayPlayAgainMessage() {
@@ -414,17 +405,11 @@ class Game {
     }
 }
 function enterPlayerName() {
-    let playerName = "";
     console.clear();
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
+    let playerName = "";
     let loop = true;
     while (loop) {
-        playerName = rl.question("What's your name?", function (name) {
-            return name.toLowerCase();
-        });
+        playerName = userInput("What's your name?\n");
         if (playerName !== "") {
             loop = false;
             break;
@@ -432,10 +417,6 @@ function enterPlayerName() {
         console.clear();
         console.log("Invalid name. Please enter at least one character");
     }
-    rl.close();
-    rl.on("close", function () {
-        process.exit(0);
-    });
     return playerName;
 }
 const playerName = enterPlayerName();

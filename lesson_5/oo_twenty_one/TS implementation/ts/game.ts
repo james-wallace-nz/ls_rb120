@@ -1,6 +1,11 @@
-require("lodash.permutations");
+import readlineSync from "readline-sync";
+/* eslint-disable */
 const _ = require("lodash");
-// const readline = require("readline");
+require("lodash.permutations");
+
+function userInput(question: string): string {
+  return readlineSync.question(question);
+}
 
 type Move = "hit" | "stay";
 
@@ -27,7 +32,7 @@ class Participant {
 
   displayCard(card: Card, displayAfterFirst: boolean): void {
     if (this._hand.length === 1 || displayAfterFirst) {
-      console.log(`${this.name} dealt a ${card}`);
+      console.log(`${this.name} dealt a ${card.toString()}`);
     } else {
       console.log(`${this.name} dealt an unknown card`);
     }
@@ -123,10 +128,6 @@ class Participant {
       acePermutationsSum
     );
 
-    // remove
-    // console.log(this._hand);
-    // console.log(possibleHandValues);
-
     return aces.length === 0 ? [nonAcesSum] : possibleHandValues;
   }
 
@@ -171,9 +172,6 @@ class Participant {
   }
 
   maxPlayableHandValue(): number {
-    // remove
-    // console.log(this.valuesBelowThreshold());
-
     const maximum = Math.max(...this.valuesBelowThreshold());
     return maximum === undefined ? 0 : maximum;
   }
@@ -185,48 +183,38 @@ class Player extends Participant {
   }
 
   chooseMove(): Move {
-    const move: Move = "stay"; // _.sample(["hit", "stay"]);
-    // const rl = readline.createInterface({
-    //   input: process.stdin,
-    //   output: process.stdout,
-    // });
+    let move = "";
+    let loop = true;
+    while (loop) {
+      move = userInput(
+        "What do you want to do? ('Hit' or 'h' / 'Stay' or 's'):"
+      ).toLowerCase();
 
-    // rl.on("close", function () {
-    //   process.exit(0);
-    // });
+      switch (move) {
+        case "s":
+          move = "stay";
+          break;
+        case "h":
+          move = "hit";
+          break;
+        default:
+          break;
+      }
 
-    // let loop = true;
-    // while (loop) {
-    //   move = rl.question(
-    //     "What do you want to do? ('Hit' or 'h' / 'Stay' or 's'):",
-    //     function (move: string) {
-    //       switch (move) {
-    //         case "s":
-    //           return "stay";
-    //         case "h":
-    //           return "hit";
-    //         default:
-    //           return move;
-    //       }
-    //     }
-    //   );
+      if (["hit", "stay"].includes(move)) {
+        loop = false;
+        break;
+      }
 
-    //   if (["hit", "stay"].includes(move)) {
-    //     loop = false;
-    //     break;
-    //   }
+      this.clearScreen();
+      console.log("Invalid move. Enter 'Hit' or 'h' / 'Stay' or 's'");
+    }
 
-    //   this.clearScreen();
-    //   console.log("Invalid move. Enter 'Hit' or 'h' / 'Stay' or 's'");
-    // }
-
-    // rl.close();
-
-    // if (move === "hit" || move === "stay") {
-    return move;
-    // } else {
-    // return "stay";
-    // }
+    if (move === "hit" || move === "stay") {
+      return move;
+    } else {
+      return "stay";
+    }
   }
 }
 
@@ -244,11 +232,7 @@ class Dealer extends Participant {
   }
 
   chooseMove(): Move {
-    // remove
-    // console.log(this.maxPlayableHandValue());
-
-    // return this.maxPlayableHandValue() >= this.hitThreshold ? "stay" : "hit";
-    return "stay";
+    return this.maxPlayableHandValue() >= this.hitThreshold ? "stay" : "hit";
   }
 }
 
@@ -284,12 +268,12 @@ class Deck {
   }
 
   shuffleDeck() {
-    // to fix
-    return _.shuffle(this.deck);
+    this.deck = _.shuffle(this.deck);
   }
 
   dealCard(participant: Participant, displayAfterFirst = true) {
-    const card = this.deck.shift;
+    const card = this.deck.shift();
+
     if (card instanceof Card) {
       participant.receiveCard(card);
       participant.displayCard(card, displayAfterFirst);
@@ -321,8 +305,8 @@ class Card {
     this.cardValue = cardValue;
   }
 
-  toString() {
-    `${this.faceValue} of ${this.suit}`;
+  toString(): string {
+    return `${this.faceValue} of ${this.suit}`;
   }
 }
 
@@ -357,8 +341,7 @@ class Game {
   }
 
   clearScreen() {
-    // fix
-    // system 'clear'
+    console.clear();
   }
 
   static get twentyOneThreshold(): number {
@@ -490,17 +473,22 @@ class Game {
   }
 
   playAgain(): boolean {
-    // const answer: string = recursiveAsyncReadLine(
-    //   "Do you want to play again? ('Yes' or 'y' / 'No' of 'n'):\n",
-    //   "Invalid answer. Enter 'Yes' or 'y' / 'No' of 'n'"
-    // );
+    let answer = "";
+    let loop = true;
+    while (loop) {
+      answer = userInput(
+        "Do you want to play again? ('Yes' or 'y' / 'No' of 'n'):\n"
+      );
 
-    // if (["yes", "y", "no", "n"].includes(answer)) {
-    //   break;
-    // }
+      if (["yes", "y", "no", "n"].includes(answer)) {
+        loop = false;
+        break;
+      }
 
-    // return ["yes", "y"].includes(answer);
-    return false;
+      console.log("Invalid answer. Enter 'Yes' or 'y' / 'No' of 'n'");
+    }
+
+    return ["yes", "y"].includes(answer);
   }
 
   displayPlayAgainMessage(): void {
@@ -516,35 +504,20 @@ class Game {
 }
 
 function enterPlayerName(): string {
-  // console.clear();
-  // const playerName: string = recursiveAsyncReadLine(
-  //   "What's your name?\n",
-  //   "Invalid name. Please enter at least one character"
-  // );
-  // return playerName;
-  return "James";
+  console.clear();
+  let playerName = "";
+  let loop = true;
+  while (loop) {
+    playerName = userInput("What's your name?\n");
+    if (playerName !== "") {
+      loop = false;
+      break;
+    }
+    console.clear();
+    console.log("Invalid name. Please enter at least one character");
+  }
+  return playerName;
 }
-
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-// });
-
-// const recursiveAsyncReadLine = function (
-//   question: string,
-//   invalid: string
-// ): string {
-//   return rl.question(question, function (answer: string) {
-//     if (answer !== "") {
-//       rl.close();
-//       return answer;
-//     } else {
-//       console.clear();
-//       console.log(invalid);
-//       return recursiveAsyncReadLine(question, invalid);
-//     }
-//   });
-// };
 
 const playerName = enterPlayerName();
 const game = new Game(playerName);
