@@ -36,7 +36,7 @@ class Card
   end
 
   def king?
-    face = 'King'
+    face == 'King'
   end
 
   def queen?
@@ -223,7 +223,7 @@ class TwentyOne
     end
   end
 
-  def show_bsted
+  def show_busted
     if player.busted?
       puts "It looks like #{player.name} busted! #{dealer.name} wins!"
     elsif dealer.busted?
@@ -251,7 +251,7 @@ class TwentyOne
     loop do
       puts "Would you like to play again? (y/n)"
       answer = gets.chomp.downcase
-      break if ['y', 'n'].include?(answer)
+      break if ['y', 'n'].include? answer
       puts 'Sorry, must be y or n'
     end
 
