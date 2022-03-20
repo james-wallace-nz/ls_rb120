@@ -6,6 +6,103 @@
 
 # Math.log2(size_of_range).to_i + 1
 
+class GuessingGame
+  RESULT_OF_GUESS = {
+    high: 'Your guess is too high',
+    low: 'Your guess is too low',
+    match: "That's the number!"
+  }.freeze
+
+  WIN_OR_LOSE = {
+    high: :lose,
+    low: :lose,
+    match: :win
+  }.freeze
+
+  RESULT_OF_GAME = {
+    win: 'You won!',
+    lose: 'You have no more guesses. You lost!'
+  }.freeze
+
+  def initialize(lower, upper)
+    @lower = lower
+    @upper = upper
+    @range = @lower..@upper
+    @max_guesses = allowed_guesses
+    @secret_number = nil
+  end
+
+  def play
+    reset
+    game_result = play_game
+    display_game_result(game_result)
+  end
+
+  private
+
+  def allowed_guesses
+    Math.log2(@upper - @lower + 1).to_i + 1
+  end
+
+  def reset
+    @secret_number = rand(@range)
+  end
+
+  # return :win or :lose
+  def play_game
+    result = nil
+    @max_guesses.downto(1) do |remaining_guesses|
+      display_guesses_remaining(remaining_guesses)
+      result = check_guess(obtain_one_guess)
+      display_guess_result(result)
+      break if result == :match
+    end
+    WIN_OR_LOSE[result]
+  end
+
+  def display_guesses_remaining(remaining_guesses)
+    puts
+    if remaining_guesses == 1
+      puts 'You have one guess remaining'
+    else
+      puts "You have #{remaining_guesses} guesses remaining"
+    end
+  end
+
+  def obtain_one_guess
+    loop do
+      print "Enter a number between #{@lower} and #{@upper}: "
+      guess = gets.chomp.to_i
+      return guess if @range.cover?(guess)
+
+      print 'Invalid guess. '
+    end
+  end
+
+  def check_guess(guess)
+    if guess > @secret_number
+      :high
+    elsif guess < @secret_number
+      :low
+    else
+      :match
+    end
+  end
+
+  def display_guess_result(result)
+    puts RESULT_OF_GUESS[result]
+  end
+
+  def display_game_result(game_result)
+    puts ''
+    puts RESULT_OF_GAME[game_result]
+  end
+end
+
+game = GuessingGame.new(501, 1500)
+game.play
+game.play
+
 # Examples:
 
 # game = GuessingGame.new(501, 1500)

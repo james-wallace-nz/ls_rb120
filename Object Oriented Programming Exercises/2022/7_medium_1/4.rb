@@ -29,6 +29,49 @@
 
 # You may assume that none of the values stored in the queue are `nil` (however, `nil` may be used to designate empty spots in the buffer).
 
+# [3, 2, 1]
+# enqueue:
+#   less than buffer size: add element to beginning of queue
+#   full: pop last element and add new element to
+
+# dequeue:
+#   pop last element
+
+class CircularQueue
+  attr_reader :queue
+
+  def initialize(buffer_size)
+    @buffer_size = buffer_size
+    @queue = []
+  end
+
+  # add object to the queue
+  def enqueue(element)
+    dequeue if @queue.size == @buffer_size
+    @queue.unshift(element)
+  end
+
+  # remove (and return) oldest object.
+  # return nil if queue is empty
+  def dequeue
+    @queue.pop
+  end
+
+  # private
+
+  # def size
+  #   @queue.size
+  # end
+
+  # def pop
+  #   @queue.pop
+  # end
+
+  # def unshift(element)
+  #   @queue.unshift(element)
+  # end
+end
+
 # Examples:
 
 queue = CircularQueue.new(3)
