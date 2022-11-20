@@ -26,7 +26,7 @@ sparky = GoodDog.new("Sparky", "12 inches", "10 lbs")
 p sparky.what_is_self
 
 class MyAwesomeClass
-  def self.this_is_a_class_methods
+  def self.this_is_a_class_method
 
   end
 

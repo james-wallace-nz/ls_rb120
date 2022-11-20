@@ -38,79 +38,145 @@
 #   pop last element
 
 class CircularQueue
-  attr_reader :queue
+  attr_reader :buffer
 
   def initialize(buffer_size)
     @buffer_size = buffer_size
-    @queue = []
+    @buffer = []
   end
 
   # add object to the queue
   def enqueue(element)
-    dequeue if @queue.size == @buffer_size
-    @queue.unshift(element)
+    dequeue if @buffer.size == @buffer_size
+    @buffer.unshift(element)
   end
 
   # remove (and return) oldest object.
   # return nil if queue is empty
   def dequeue
-    @queue.pop
+    @buffer.pop
   end
 
   # private
 
   # def size
-  #   @queue.size
+  #   @buffer.size
   # end
 
   # def pop
-  #   @queue.pop
+  #   @buffer.pop
   # end
 
   # def unshift(element)
-  #   @queue.unshift(element)
+  #   @buffer.unshift(element)
   # end
 end
+
+
+# Solution
+
+# class CircularQueue
+#   attr_reader :buffer
+
+#   def initialize(size)
+#     @buffer = [nil] * size
+#     @next_position = 0
+#     @oldest_position = 0
+#   end
+
+#   def enqueue(object)
+#     unless @buffer[@next_position].nil?
+#       @oldest_position = increment(@next_position)
+#     end
+
+#     @buffer[@next_position] = object
+#     @next_position = increment(@next_position)
+#   end
+
+#   def dequeue
+#     value = @buffer[@oldest_position]
+#     @buffer[@oldest_position] = nil
+#     @oldest_position = increment(@oldest_position) unless value.nil?
+#     value
+#   end
+
+#   private
+
+#   def increment(position)
+#     (position + 1) % @buffer.size
+#   end
+# end
 
 # Examples:
 
 queue = CircularQueue.new(3)
+p queue.buffer
 puts queue.dequeue == nil
+p queue.buffer
 
 queue.enqueue(1)
+p queue.buffer
 queue.enqueue(2)
+p queue.buffer
 puts queue.dequeue == 1
+p queue.buffer
 
 queue.enqueue(3)
+p queue.buffer
 queue.enqueue(4)
+p queue.buffer
 puts queue.dequeue == 2
+p queue.buffer
 
 queue.enqueue(5)
+p queue.buffer
 queue.enqueue(6)
+p queue.buffer
 queue.enqueue(7)
+p queue.buffer
 puts queue.dequeue == 5
+p queue.buffer
 puts queue.dequeue == 6
+p queue.buffer
 puts queue.dequeue == 7
+p queue.buffer
 puts queue.dequeue == nil
+p queue.buffer
 
 queue = CircularQueue.new(4)
+p queue.buffer
 puts queue.dequeue == nil
+p queue.buffer
 
 queue.enqueue(1)
+p queue.buffer
 queue.enqueue(2)
+p queue.buffer
 puts queue.dequeue == 1
+p queue.buffer
 
 queue.enqueue(3)
+p queue.buffer
 queue.enqueue(4)
+p queue.buffer
 puts queue.dequeue == 2
+p queue.buffer
 
 queue.enqueue(5)
+p queue.buffer
 queue.enqueue(6)
+p queue.buffer
 queue.enqueue(7)
-puts queue.dequeue == 4
-puts queue.dequeue == 5
-puts queue.dequeue == 6
-puts queue.dequeue == 7
-puts queue.dequeue == nil
+p queue.buffer
 
+puts queue.dequeue == 4
+p queue.buffer
+puts queue.dequeue == 5
+p queue.buffer
+puts queue.dequeue == 6
+p queue.buffer
+puts queue.dequeue == 7
+p queue.buffer
+puts queue.dequeue == nil
+p queue.buffer
 # The above code should display true 15 times.
