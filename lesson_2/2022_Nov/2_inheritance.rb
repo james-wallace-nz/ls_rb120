@@ -63,10 +63,10 @@ bud.swim                # => "can't swim!"
 
 # 3.
 
-              Pet (run, jump)
-Cat (speak)                     Dog (speak, swim, fetch)
+#               Pet (run, jump)
+# Cat (speak)                     Dog (speak, swim, fetch)
 
-                                Bulldog (swim)
+#                                 Bulldog (swim)
 
 # 4.
 
