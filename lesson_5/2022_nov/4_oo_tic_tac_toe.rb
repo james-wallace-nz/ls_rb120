@@ -69,6 +69,7 @@ class TTTGame
       human_moves
       # break if someone_won? || board_full?
 
+      computer_moves
       display_board
       break
       break if someone_won? || board_full?
@@ -113,6 +114,10 @@ class TTTGame
     # @human.mark(square)
 
     board.set_square_at(square, human.marker)
+  end
+
+  def computer_moves
+    board.set_square_at((1..9).to_a.sample, computer.marker)
   end
 
   def display_goodbye_message

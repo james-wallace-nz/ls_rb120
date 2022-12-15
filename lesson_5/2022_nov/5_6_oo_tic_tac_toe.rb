@@ -3,11 +3,11 @@ require 'pry'
 # Spike:
 
 class Board
-  INITIAL_MARKER = ' '
 
   def initialize
     @squares = {}
-    (1..9).each { |key| @squares[key] = Square.new(INITIAL_MARKER) }
+    # instantiate new square it will default to initial marker so don't have to pass anything in.
+    (1..9).each { |key| @squares[key] = Square.new }
   end
 
   def get_square_at(key)
@@ -15,23 +15,38 @@ class Board
   end
 
   def set_square_at(key, marker)
-    # Retrieve square object at the key
-    # calling the setter method `marker=()`
-    # don't need to create a new Square object, although could do that with new marker
-    # or reassign existing marker for that square object
     @squares[key].marker = marker
+  end
+
+  # We have the notion of squares so this method wouldn't return an array of square objects
+  def unmarked_keys
+    @squares.keys.select { |key| @squares[key].unmarked? }
+    # alternatively
+    # @squares.select { |_, sq| sq.unmarked?}.keys
+  end
+
+  def full?
+    unmarked_keys.empty?
   end
 end
 
 class Square
+  # The concern seems to be here as it is referenced by this class
+  INITIAL_MARKER = ' '
+
   attr_accessor :marker
 
-  def initialize(marker)
+  def initialize(marker=INITIAL_MARKER)
     @marker = marker
   end
 
   def to_s
     @marker
+  end
+
+  def unmarked?
+    # marker == Board::INITIAL_MARKER
+    marker == INITIAL_MARKER
   end
 end
 
@@ -63,17 +78,19 @@ class TTTGame
 
   def play
     display_welcome_message
-    loop do
       display_board
-
+    loop do
       human_moves
+      # board should be aware of it being full
+      break if board.full?
+
+      computer_moves
+      break if board.full?
       # break if someone_won? || board_full?
 
       display_board
-      break
-      break if someone_won? || board_full?
     end
-    # display_result
+    display_result
     display_goodbye_message
   end
 
@@ -84,6 +101,8 @@ class TTTGame
   end
 
   def display_board
+    system 'clear'
+    puts "You're a #{human.marker}. Computer is a #{computer.marker}."
     puts ''
     puts '     |     |'
     puts "  #{board.get_square_at(1)}  |  #{board.get_square_at(2)}  |  #{board.get_square_at(3)}"
@@ -100,11 +119,11 @@ class TTTGame
   end
 
   def human_moves
-    puts "Choose a square between 1-9: "
+    puts "Choose a square (#{board.unmarked_keys.join(', ')}): "
     square = nil
     loop do
       square = gets.chomp.to_i
-      break if (1..9).include?(square)
+      break if board.unmarked_keys.include?(square)
       puts "Sorry, that's not a valid choice."
     end
 
@@ -113,6 +132,15 @@ class TTTGame
     # @human.mark(square)
 
     board.set_square_at(square, human.marker)
+  end
+
+  def computer_moves
+    board.set_square_at(board.unmarked_keys.sample, computer.marker)
+  end
+
+  def display_result
+    display_board
+    puts "The board is full"
   end
 
   def display_goodbye_message
