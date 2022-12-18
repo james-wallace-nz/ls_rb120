@@ -48,6 +48,21 @@ class Length
     self > other || self == other
   end
 
+  def <=>(other)
+    # if self < other
+    #   -1
+    # elsif self > other
+    #   1
+    # else
+    #   0
+    # end
+    case unit
+    when :km  then value <=> other.as_kilometers.value
+    when :mi  then value <=> other.as_miles.value
+    when :nmi then value <=> other.as_nautical_miles.value
+    end
+  end
+
   def to_s
     "#{value} #{unit}"
   end

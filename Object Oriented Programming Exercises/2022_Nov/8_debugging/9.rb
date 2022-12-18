@@ -33,7 +33,8 @@ module Mailing
     false
   end
 
-  def send(destination, mail)
+  # def send(destination, mail)
+  def send_mail(destination, mail)
     "Sending #{mail} from #{name} to: #{destination}"
     # Omitting the actual sending.
   end
@@ -72,6 +73,8 @@ class TelephoneService < CommunicationsProvider
 end
 
 class PostalService < CommunicationsProvider
+  include Mailing
+
   attr_accessor :street_address, :mailbox
 
   def initialize(name, street_address)
@@ -90,5 +93,6 @@ johns_phone_service   = TelephoneService.new('John', 122, '555-232-1121')
 johns_postal_service  = PostalService.new('John', '47 Sunshine Ave.')
 ellens_postal_service = PostalService.new('Ellen', '860 Blackbird Ln.')
 
-puts johns_postal_service.send(ellens_postal_service.street_address, Postcard.new('Greetings from Silicon Valley!'))
+# puts johns_postal_service.send(ellens_postal_service.street_address, Postcard.new('Greetings from Silicon Valley!'))
+puts johns_postal_service.send_mail(ellens_postal_service.street_address, Postcard.new('Greetings from Silicon Valley!'))
 # => undefined method `860 Blackbird Ln.' for #<PostalService:0x00005571b4aaebe8> (NoMethodError)

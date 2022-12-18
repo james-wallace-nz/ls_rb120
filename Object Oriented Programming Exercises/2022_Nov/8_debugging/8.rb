@@ -34,11 +34,11 @@ class TaskManager
   end
 
   def display_high_priority_tasks
-    tasks = tasks.select do |task|
+    high_priority_tasks = tasks.select do |task|
       task.priority == :high
     end
 
-    display(tasks)
+    display(high_priority_tasks)
   end
 
   private
@@ -77,3 +77,11 @@ valentinas_tasks.complete_task('read OOP book')
 valentinas_tasks.display_all_tasks
 valentinas_tasks.display_high_priority_tasks
 
+
+# Read through the error message carefully:
+
+# `taskmanager.rb:35:in `display_high_priority_tasks': private method `select' called for nil:NilClass (NoMethodError)
+
+# It tells you that on line 35, the method select is called on nil. Since we call tasks.select on line 35, this means that tasks is nil. Why?
+
+# The `tasks` local variable is being instantiated on line `35` while the `select` method is also being called on it before intantiation. Therefore, `tasks` is nil when `select` is being called. We have to rename the local variable to prevent the same name shadowing our `tasks` instance variable

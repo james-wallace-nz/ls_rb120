@@ -1,6 +1,9 @@
+require 'pry'
+require 'pry-byebug'
+
 # We discovered Gary Bernhardt's repository for finding out whether something rocks or not, and decided to adapt it for a simple example.
 
-class AuthenticationError < Exception; end
+class AuthenticationError < StandardError; end
 
 # A mock search engine
 # that returns a random number instead of an actual count.
@@ -21,7 +24,7 @@ class SearchEngine
 end
 
 module DoesItRock
-  API_KEY = 'LS1A'
+  API_KEY = 'LS1A' # - integer_to_string'
 
   class NoScore; end
 
@@ -31,8 +34,8 @@ module DoesItRock
       negative = SearchEngine.count(%{"#{term} is not fun"}, API_KEY).to_f
 
       positive / (positive + negative)
-    rescue Exception
-      NoScore
+    rescue ZeroDivisionError
+      NoScore.new
     end
   end
 
@@ -49,7 +52,7 @@ module DoesItRock
     else
       "#{term} rocks!"
     end
-  rescue Exception => e
+  rescue StandardError => e
     e.message
   end
 end

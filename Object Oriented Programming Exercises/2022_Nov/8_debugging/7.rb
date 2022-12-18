@@ -1,12 +1,16 @@
+# require 'pry'
+# require 'pry-byebug'
+
 # We created a simple BankAccount class with overdraft protection, that does not allow a withdrawal greater than the amount of the current balance. We wrote some example code to test our program. However, we are surprised by what we see when we test its behavior. Why are we seeing this unexpected output? Make changes to the code so that we see the appropriate behavior.
 
 class BankAccount
-  attr_reader :balance
+  attr_reader :balance, :test
 
   def initialize(account_number, client)
     @account_number = account_number
     @client = client
     @balance = 0
+    @test = 'string '
   end
 
   def deposit(amount)
@@ -19,13 +23,16 @@ class BankAccount
   end
 
   def withdraw(amount)
-    if amount > 0
-      success = (self.balance -= amount)
-    else
-      success = false
-    end
+    # binding.pry
 
-    if success
+    if amount > 0 && valid_transaction?(balance - amount)
+    #   success = (self.balance -= amount)
+    # else
+    #   success = false
+    # end
+
+    # if success
+      self.balance -= amount
       "$#{amount} withdrawn. Total balance is $#{balance}."
     else
       "Invalid. Enter positive amount less than or equal to current balance ($#{balance})."
@@ -33,12 +40,16 @@ class BankAccount
   end
 
   def balance=(new_balance)
-    if valid_transaction?(new_balance)
+    #  if valid_transaction?(new_balance)
       @balance = new_balance
-      true
-    else
-      false
-    end
+    #   true
+    # else
+    #   false
+    # end
+  end
+
+  def test=(str)
+    @test = str << 'testing'
   end
 
   def valid_transaction?(new_balance)
@@ -58,3 +69,10 @@ p account.withdraw(80)    # => Invalid. Enter positive amount less than or equal
                           # Actual output: $80 withdrawn. Total balance is $50.
 p account.balance         # => 50
 
+# Further Exploration:
+p account.test
+'string '
+p account.test= 'new string '
+'new string testing'
+p account.test
+'new string testing'
