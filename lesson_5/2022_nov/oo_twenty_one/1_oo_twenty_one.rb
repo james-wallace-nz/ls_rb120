@@ -8,8 +8,8 @@ module Hand
   def hit(new_card)
     puts "#{name} choose to hit"
     puts ''
-    puts "#{name} dealt #{new_card}"
-    self + new_card
+    puts "#{name} dealt #{new_card}..."
+    add_card(new_card)
     puts ''
     puts "#{name}'s cards are:"
     display_hand
@@ -28,25 +28,28 @@ module Hand
     hand_value > MAX_HAND_VALUE
   end
 
-  def +(card)
+  def add_card(card)
     @hand.push(card)
   end
 
   def display_hand
     @hand.each do |card|
-      puts card
+      puts " - #{card}"
     end
   end
 
   def hand_value
     value = 0
     @hand.each do |card|
-      value += if card.face == 'Ace'
-                 card.value.first
-               else
-                 card.value
-               end
+      value += card.face == 'Ace' ? card.value.last : card.value
     end
+
+    @hand.select { |card| card.face == 'Ace' }.each do |_|
+      if value > MAX_HAND_VALUE
+        value -= 10
+      end
+    end
+
     value
   end
 
@@ -61,12 +64,17 @@ end
 
 class Participant
   include Hand
+  include Comparable
 
   attr_reader :name
 
   def initialize(name)
     @name = name
     @hand = []
+  end
+
+  def <=>(other_player)
+    hand_value <=> other_player.hand_value
   end
 end
 
@@ -75,13 +83,13 @@ end
 
 class Dealer < Participant
   def display_first_card
-    puts @hand.first
+    puts " - #{@hand.first}"
   end
 
   def display_first_card_value
     card = @hand.first
     value = if card.face == 'Ace'
-              card.value.first
+              card.value.last
             else
               card.value
             end
@@ -188,8 +196,8 @@ class TwentyOneGame
     puts "First two cards being dealt..."
     puts ''
     2.times do
-      @player + @deck.deal
-      @dealer + @deck.deal
+      @player.add_card(@deck.deal)
+      @dealer.add_card(@deck.deal)
     end
   end
 
@@ -205,17 +213,7 @@ class TwentyOneGame
 
   def player_move
     loop do
-      action = nil
-      loop do
-        puts ''
-        puts "Do you want to hit or stay? (h/s)"
-        action = gets.chomp.downcase
-        break if %w(h s).include? action
-
-        clear_screen
-        puts "Invalid answer. Enter 'h' or 's'"
-        @player.display_hand_value
-      end
+      action = player_action
       clear_screen
       if action == 'h'
         @player.hit(@deck.deal)
@@ -225,6 +223,21 @@ class TwentyOneGame
         break
       end
     end
+  end
+
+  def player_action
+    action = nil
+    loop do
+      puts ''
+      puts "Do you want to hit or stay? (h/s)"
+      action = gets.chomp.downcase
+      break if %w(h s).include? action
+
+      clear_screen
+      puts "Invalid answer. Enter 'h' or 's'"
+      @player.display_hand_value
+    end
+    action
   end
 
   def dealer_move
@@ -241,7 +254,14 @@ class TwentyOneGame
   end
 
   def display_result
-
+    puts ''
+    if @player.busted? || (@player < @dealer && !@dealer.busted?)
+      puts "Dealer wins"
+    elsif @dealer.busted? || @player > @dealer
+      puts "Player wins!"
+    else
+      puts "It's a tie"
+    end
   end
 
   def play_again?
